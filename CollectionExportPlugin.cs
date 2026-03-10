@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
+using System.Windows;
 using Hearthstone_Deck_Tracker;
 using Hearthstone_Deck_Tracker.Hearthstone;
 using Hearthstone_Deck_Tracker.Plugins;
@@ -68,6 +69,7 @@ namespace CollectionExportPlugin
 			if(!Core.Game.IsRunning)
 			{
 				Log.Warn("Collection export aborted: Hearthstone is not running.");
+				ShowError("Hearthstone is not running. Please launch Hearthstone and try again.");
 				return;
 			}
 
@@ -75,31 +77,40 @@ namespace CollectionExportPlugin
 			if(collection == null)
 			{
 				Log.Warn("Collection export aborted: collection not loaded. Visit the in-game collection screen and try again.");
+				ShowError("Collection not loaded. Open the in-game Collection screen and try again.");
 				return;
 			}
 
-			string filePath;
-			if(!string.IsNullOrWhiteSpace(exportFileOverride))
+			try
 			{
-				filePath = exportFileOverride;
-				var exportDir = Path.GetDirectoryName(filePath);
-				if(!string.IsNullOrEmpty(exportDir))
+				string filePath;
+				if(!string.IsNullOrWhiteSpace(exportFileOverride))
+				{
+					filePath = exportFileOverride;
+					var exportDir = Path.GetDirectoryName(filePath);
+					if(!string.IsNullOrEmpty(exportDir))
+						Directory.CreateDirectory(exportDir);
+				}
+				else
+				{
+					var exportDir = GetExportDirectory(string.Empty);
 					Directory.CreateDirectory(exportDir);
-			}
-			else
-			{
-				var exportDir = GetExportDirectory(string.Empty);
-				Directory.CreateDirectory(exportDir);
-				filePath = Path.Combine(exportDir, GetDefaultFileName(collection.BattleTag));
-			}
+					filePath = Path.Combine(exportDir, GetDefaultFileName(collection.BattleTag));
+				}
 
-			var json = JsonConvert.SerializeObject(collection, Formatting.Indented);
+			var json = SerializeToJson(collection);
 			File.WriteAllText(filePath, json);
 
-			Log.Info($"Collection exported to {filePath}");
+				Log.Info($"Collection exported to {filePath}");
 
-			if(openFolderAfterExport)
-				OpenFolder(Path.GetDirectoryName(filePath) ?? GetExportDirectory(string.Empty));
+				if(openFolderAfterExport)
+					OpenFolder(Path.GetDirectoryName(filePath) ?? GetExportDirectory(string.Empty));
+			}
+			catch(Exception ex)
+			{
+				Log.Error(ex);
+				ShowError($"Export failed: {ex.Message}");
+			}
 		}
 
 		private static string GetExportDirectory(string overrideDir)
@@ -116,6 +127,20 @@ namespace CollectionExportPlugin
 		private static string PromptForFile(string defaultFileName)
 		{
 			return FileSavePicker.PickFile("Save collection as", defaultFileName);
+		}
+
+		private static string SerializeToJson(object value)
+		{
+			return JsonConvert.SerializeObject(value, Formatting.Indented);
+		}
+
+		private static void ShowError(string message)
+		{
+			var app = Application.Current;
+			if(app?.Dispatcher != null)
+				app.Dispatcher.Invoke(() => MessageBox.Show(message, "Collection Exporter", MessageBoxButton.OK, MessageBoxImage.Warning));
+			else
+				MessageBox.Show(message, "Collection Exporter", MessageBoxButton.OK, MessageBoxImage.Warning);
 		}
 
 		private static string GetDefaultFileName(string battleTag)
