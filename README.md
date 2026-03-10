@@ -10,11 +10,12 @@ Exports your Hearthstone collection to JSON in the HSReplay format. Use the plug
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <PropertyGroup>
-    <HDT_DIR>C:\Path\To\HearthstoneDeckTracker</HDT_DIR>
+    <HDT_DIR>C:\Users\User\AppData\Local\HearthstoneDeckTracker\app-1.49.15</HDT_DIR>
     <!-- Optional if HearthDb.dll is in the same folder as the exe -->
-    <HDT_LIB_DIR>C:\Path\To\HearthstoneDeckTracker</HDT_LIB_DIR>
+    <HDT_LIB_DIR>C:\Users\User\AppData\Local\HearthstoneDeckTracker\app-1.49.15</HDT_LIB_DIR>
   </PropertyGroup>
 </Project>
+
 ```
 
 2. Build:
