@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <!-- Set in Directory.Build.props.user or via environment variables -->
+    <HDT_DIR>$(HDT_DIR)</HDT_DIR>
+    <HDT_LIB_DIR Condition="'$(HDT_LIB_DIR)' == ''">$(HDT_DIR)</HDT_LIB_DIR>
+  </PropertyGroup>
+  <Import Project="Directory.Build.props.user" Condition="Exists('Directory.Build.props.user')" />
+</Project>
