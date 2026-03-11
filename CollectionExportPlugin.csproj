@@ -38,7 +38,11 @@
       <HintPath>$(HDT_LIB_DIR)\HearthDb.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="HearthstoneDeckTracker">
+    <Reference Include="HearthstoneDeckTracker" Condition="Exists('$(HDT_DIR)\Hearthstone Deck Tracker.exe')">
+      <HintPath>$(HDT_DIR)\Hearthstone Deck Tracker.exe</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="HearthstoneDeckTracker" Condition="Exists('$(HDT_DIR)\HearthstoneDeckTracker.exe')">
       <HintPath>$(HDT_DIR)\HearthstoneDeckTracker.exe</HintPath>
       <Private>False</Private>
     </Reference>

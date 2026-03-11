@@ -1,0 +1,52 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    env:
+      HDT_VERSION: "1.49.15"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Download HDT Zip
+        shell: pwsh
+        run: |
+          $zip = "hdt.zip"
+          $url = "https://github.com/HearthSim/Hearthstone-Deck-Tracker/releases/download/v$env:HDT_VERSION/Hearthstone.Deck.Tracker-v$env:HDT_VERSION.zip"
+          Invoke-WebRequest -Uri $url -OutFile $zip
+          Expand-Archive -Path $zip -DestinationPath hdt
+          $required = @("HearthDb.dll","Newtonsoft.Json.dll","Hearthstone Deck Tracker.exe")
+          foreach ($name in $required) {
+            if (-not (Get-ChildItem -Path hdt -Recurse -Filter $name | Select-Object -First 1)) {
+              throw "$name not found in extracted zip"
+            }
+          }
+          $dll = Get-ChildItem -Path hdt -Recurse -Filter "HearthDb.dll" | Select-Object -First 1
+          if (-not $dll) { throw "HearthDb.dll not found in extracted zip" }
+          $dir = Split-Path -Parent $dll.FullName
+          "HDT_DIR=$dir" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "HDT_LIB_DIR=$dir" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Build
+        run: dotnet build .\CollectionExportPlugin.csproj -c Release -p:Platform=x86
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: bin/x86/Release/*.dll
